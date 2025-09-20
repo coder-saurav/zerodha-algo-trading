@@ -17,7 +17,7 @@ The core functionality allows a user to specify a strike price, number of lots, 
 ---
 
 ## Features
-- **Secure API Connection**: Connects to the Kite API using credentials stored securely in a `.env` file.
+- **Interactive API Connection**: Establishes a secure connection to the Kite API at runtime by guiding the user through an interactive login flow.
 - **Dynamic Instrument Handling**: Automatically constructs trading symbols and fetches the correct lot size at runtime.
 - **Bracket Order Execution**: Places sell-side Bracket Orders to ensure a stop loss and target are always attached to the primary order.
 - **Command-Line Interface**: Accepts all trading parameters as command-line arguments for easy scripting and automation.
@@ -77,37 +77,50 @@ pip install -r requirements.txt
 ```
 
 ### 4. Configure Environment Variables
-Create a file named `.env` in the root of the project directory and populate it with your Kite API credentials.
+Create a file named `.env` in the root of the project directory and populate it with your Kite API Key and Secret.
 
 ```ini
 # .env file
 KITE_API_KEY="your_api_key"
 KITE_API_SECRET="your_api_secret"
-KITE_ACCESS_TOKEN="your_access_token"
 ```
-**IMPORTANT**: The `KITE_ACCESS_TOKEN` must be generated daily. Refer to the [Kite Connect documentation](https://kite.trade/docs/connect/v3/user/) for the process of generating an access token.
+**Note**: The `KITE_ACCESS_TOKEN` is no longer needed here; it will be generated each time you run the application.
 
 ---
 
 ## How to Run
-The application is run from the command line, providing all trade parameters as arguments.
+The application uses an interactive process to get the necessary access token each time it runs.
 
-### Example Usage
-To execute a **dry run** for selling 1 lot of a NIFTY PE option at a strike of 25000 with a 50-point stop loss and 100-point target:
+### 1. Start the Application
+Run `main.py` from your terminal, providing the trade parameters as arguments.
 ```bash
 python main.py --strike 25000 --lots 1 --sl 50 --target 100 --dry-run
 ```
 
-To execute a **live trade** (remove the `--dry-run` flag):
+### 2. Authorize via Zerodha
+The application will print a login URL to the console.
+- **Copy** this URL and **paste** it into your web browser.
+- **Log in** to your Zerodha account.
+- **Authorize** the application.
+
+### 3. Provide the Request Token
+After authorization, Zerodha will redirect your browser to a new URL. This URL will contain a `request_token` parameter (e.g., `https://your-redirect-url.com/?status=success&request_token=YOUR_TOKEN_HERE`).
+- **Copy** the `request_token` value from the URL.
+- **Paste** it back into the terminal where the application is waiting for input.
+
+The application will then complete the connection and execute the trade based on your command-line arguments.
+
+**Disclaimer**: Live trading involves significant financial risk. Always test thoroughly in dry-run mode before deploying with real capital.
 ```bash
+# To run a live trade, remove the --dry-run flag
 python main.py --strike 25000 --lots 1 --sl 50 --target 100
 ```
-**Disclaimer**: Live trading involves significant financial risk. Always test thoroughly in dry-run mode before deploying with real capital.
 
 ---
 
 ## Future Enhancements
 This system is designed as a foundation. Here are some potential ways to extend its functionality:
+- **Token Caching**: Implement a mechanism to cache the `access_token` to a local file and reuse it until it expires, reducing the need for interactive login on every run.
 - **WebSocket Integration**: Upgrade the polling-based position monitor to use the KiteTicker WebSocket for real-time, low-latency updates on ticks and order status.
 - **AI/ML Signal Integration**: Incorporate a machine learning model (e.g., using scikit-learn or TensorFlow) to generate trading signals instead of relying on manual inputs.
 - **Cloud Deployment**: Dockerize the application and deploy it to a cloud service (AWS, GCP, Azure) for continuous, reliable operation.

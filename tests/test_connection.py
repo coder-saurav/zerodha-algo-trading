@@ -1,55 +1,70 @@
 import pytest
-from unittest.mock import patch
-from utils.connection import establish_connection
-
-@patch('utils.connection.os.getenv')
-def test_establish_connection_missing_credentials(mock_getenv):
-    """
-    Tests that establish_connection raises a ValueError if credentials are not set.
-    """
-    # Arrange: Mock os.getenv to simulate missing credentials
-    mock_getenv.return_value = None
-
-    # Act & Assert: Check if ValueError is raised
-    with pytest.raises(ValueError) as excinfo:
-        establish_connection()
-
-    # Assert that the error message is as expected
-    assert "Missing or placeholder API credentials" in str(excinfo.value)
-
-@patch('utils.connection.os.getenv')
-def test_establish_connection_placeholder_credentials(mock_getenv):
-    """
-    Tests that establish_connection raises a ValueError if placeholder credentials are used.
-    """
-    # Arrange: Mock os.getenv to simulate placeholder values
-    mock_getenv.side_effect = ['your_api_key', 'your_api_secret', 'your_access_token']
-
-    # Act & Assert: Check if ValueError is raised
-    with pytest.raises(ValueError) as excinfo:
-        establish_connection()
-
-    # Assert that the error message is as expected
-    assert "Missing or placeholder API credentials" in str(excinfo.value)
+from unittest.mock import patch, Mock
+from utils.connection import establish_interactive_connection
 
 @patch('utils.connection.KiteConnect')
 @patch('utils.connection.os.getenv')
-def test_establish_connection_success(mock_getenv, mock_kiteconnect):
+@patch('builtins.input')
+def test_establish_interactive_connection_success(mock_input, mock_getenv, mock_kiteconnect):
     """
-    Tests the success path of establish_connection, mocking the KiteConnect client.
+    Tests the successful interactive connection flow.
     """
-    # Arrange: Mock os.getenv to return valid-looking credentials
-    mock_getenv.side_effect = ['myapikey', 'myapisecret', 'myaccesstoken']
+    # Arrange
+    # Mock environment variables
+    mock_getenv.side_effect = ['my_api_key', 'my_api_secret']
 
-    # Arrange: Mock the KiteConnect instance and its profile method
+    # Mock the input() call to return a fake request token
+    mock_input.return_value = 'my_request_token'
+
+    # Mock the KiteConnect instance and its methods
     mock_kite_instance = mock_kiteconnect.return_value
+    mock_kite_instance.login_url.return_value = "http://fake-login-url.com"
+    mock_kite_instance.generate_session.return_value = {
+        'access_token': 'my_access_token',
+        'user_id': 'AB1234'
+    }
     mock_kite_instance.profile.return_value = {'user_id': 'AB1234'}
 
     # Act
-    kite = establish_connection()
+    kite = establish_interactive_connection()
 
     # Assert
+    # Check that KiteConnect was initialized correctly
+    mock_kiteconnect.assert_called_with(api_key='my_api_key')
+
+    # Check that the login URL was requested
+    mock_kite_instance.login_url.assert_called_once()
+
+    # Check that input was called
+    mock_input.assert_called_once_with("Enter the request_token here: ")
+
+    # Check that generate_session was called with the correct parameters
+    mock_kite_instance.generate_session.assert_called_with(
+        'my_request_token', api_secret='my_api_secret'
+    )
+
+    # Check that the access token was set
+    mock_kite_instance.set_access_token.assert_called_with('my_access_token')
+
+    # Check that the connection was verified
+    mock_kite_instance.profile.assert_called_once()
+
+    # Check that the final kite object is returned
     assert kite is not None
-    mock_kiteconnect.assert_called_with(api_key='myapikey')
-    kite.set_access_token.assert_called_with('myaccesstoken')
-    kite.profile.assert_called_once()
+    assert kite == mock_kite_instance
+
+@patch('utils.connection.os.getenv')
+@patch('builtins.input')
+def test_establish_interactive_connection_empty_token(mock_input, mock_getenv):
+    """
+    Tests that a ValueError is raised if the user provides an empty request token.
+    """
+    # Arrange
+    mock_getenv.side_effect = ['my_api_key', 'my_api_secret']
+    mock_input.return_value = '' # Empty input
+
+    # Act & Assert
+    with pytest.raises(ValueError) as excinfo:
+        establish_interactive_connection()
+
+    assert "Request token cannot be empty" in str(excinfo.value)

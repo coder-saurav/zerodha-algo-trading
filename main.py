@@ -1,6 +1,6 @@
 import logging
 import argparse
-from utils.connection import retry_connection
+from utils.connection import establish_interactive_connection
 from strategy.strategy import execute_strategy
 
 # Configure logging
@@ -52,7 +52,7 @@ def main():
         strike_price, lots, stop_loss, target, dry_run = get_user_inputs()
 
         # Establish API connection
-        kite = retry_connection()
+        kite = establish_interactive_connection()
 
         # The lot size fetching is now handled inside the strategy,
         # so we calculate initial quantity here and let the strategy refine it.
