@@ -1,0 +1,17 @@
+Project: Python-based Algorithmic Trading System
+
+Primary Goal:
+- To build a simple, secure, and modular system for executing intraday sell trades for options/futures on the Zerodha Kite platform. The system will use bracket orders to automatically manage stop loss and target levels.
+
+Core Features:
+- Secure API Connection: Connect to Zerodha Kite API (v4) using credentials stored in environment variables. Acknowledge 2025 update: personal trading APIs are free.
+- Dynamic User Inputs: Prompt the user for trade parameters, including strike price, number of lots, stop loss, and target.
+- Dynamic Quantity Calculation: Fetch instrument lot sizes dynamically via the API to ensure accuracy with 2025 regulations (e.g., Nifty at 75, BankNifty at 35).
+- Bracket Order Execution: Place sell orders (MIS product type) using bracket orders to bundle the main order with its corresponding stop loss and target orders.
+- Position Monitoring: Implement a basic polling mechanism to monitor open positions and PNL. Note plan to upgrade to WebSockets for real-time updates.
+- Extensibility: Design with a modular structure to easily accommodate future enhancements like AI-driven signals or deployment to the cloud.
+
+Considerations for 2025:
+- API Pricing: Personal trading API is free; data API costs ₹500/month.
+- GTT Orders: Consider Good Till Triggered (GTT) orders as a persistent alternative if bracket orders fail due to market volatility.
+- Lot Sizes: All lot size calculations must be dynamic.
