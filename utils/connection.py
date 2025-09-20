@@ -33,21 +33,23 @@ def establish_interactive_connection():
 
     # 1. Generate and print the login URL
     print("\n--- Interactive Login Required ---")
-    print("1. Please login to Kite and authorize the app to get the request_token.")
-    print(f"2. Login URL: {kite.login_url()}")
-    print("3. After successful login, you will be redirected to a URL.")
-    print("4. Copy the 'request_token' value from that redirect URL.\n")
+    print("1. Copy the URL below and paste it into your browser.")
+    print(f"   Login URL: {kite.login_url()}")
+    print("2. Log in to your Zerodha account and grant permissions.")
+    print("3. You will be redirected to a new page. The URL of this new page will look something like this:")
+    print("   https://your-redirect-url.com/?status=success&request_token=THIS_IS_THE_TOKEN_YOU_NEED")
+    print("4. Copy the value of the 'request_token' from that URL.")
 
     # 2. Prompt user for the request_token
-    request_token = input("Enter the request_token here: ")
+    request_token = input("\nPaste the request_token here and press Enter: ")
 
-    if not request_token:
-        raise ValueError("Request token cannot be empty.")
+    if not request_token or len(request_token) < 10:
+        raise ValueError("The provided request_token is empty or too short. Please try again.")
 
     try:
         # 3. Generate session and get access_token
         logger.info("Generating session with the provided request_token...")
-        user_data = kite.generate_session(request_token, api_secret=api_secret)
+        user_data = kite.generate_session(request_token.strip(), api_secret=api_secret)
         access_token = user_data['access_token']
 
         # 4. Set the access token for the current session
@@ -63,4 +65,5 @@ def establish_interactive_connection():
 
     except Exception as e:
         logger.error(f"Authentication failed: {e}")
+        logger.error("This could be due to an invalid API Key/Secret in your .env file or an expired/incorrect request_token.")
         raise

@@ -98,15 +98,15 @@ python main.py --strike 25000 --lots 1 --sl 50 --target 100 --dry-run
 ```
 
 ### 2. Authorize via Zerodha
-The application will print a login URL to the console.
-- **Copy** this URL and **paste** it into your web browser.
-- **Log in** to your Zerodha account.
-- **Authorize** the application.
+The application will print a login URL and detailed instructions to the console.
+- **Copy** the generated URL and **paste** it into your web browser.
+- **Log in** to your Zerodha account and **authorize** the application when prompted.
 
 ### 3. Provide the Request Token
-After authorization, Zerodha will redirect your browser to a new URL. This URL will contain a `request_token` parameter (e.g., `https://your-redirect-url.com/?status=success&request_token=YOUR_TOKEN_HERE`).
-- **Copy** the `request_token` value from the URL.
-- **Paste** it back into the terminal where the application is waiting for input.
+After authorization, your browser will be redirected to a new page. The URL in the address bar will now contain a `request_token`.
+- **Example URL:** `https://your-redirect-url.com/?status=success&request_token=THIS_IS_THE_TOKEN_YOU_NEED`
+- **Copy** the long string of characters that is the value for the `request_token`.
+- **Paste** it back into the terminal where the application is waiting for input and press Enter.
 
 The application will then complete the connection and execute the trade based on your command-line arguments.
 
